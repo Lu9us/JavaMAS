@@ -166,6 +166,14 @@ public class Portal extends MetaAgent
                 Message msg = getQueue().take();
                 if (!msg.getReceiver().equals(this.getName()))
                 {
+                    if("/all".equals(msg.getReceiver()))
+                    {
+                    for(MetaAgent agent : InternalRoutingTable.values())
+                    {
+                    agent.receiveMessage(msg);
+                    }
+                    
+                    }
                     if (InternalRoutingTable.containsKey(msg.getReceiver()))
                     {
                         InternalRoutingTable.get(msg.getReceiver()).receiveMessage(msg);
