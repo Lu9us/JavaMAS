@@ -172,7 +172,10 @@ public class Portal extends MetaAgent
                     {
                     agent.receiveMessage(msg);
                     }
-                    
+                    if(socketAgent!=null)
+                    {
+                    socketAgent.writeMessage(msg);
+                    }
                     }
                     if (InternalRoutingTable.containsKey(msg.getReceiver()))
                     {
