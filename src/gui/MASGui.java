@@ -26,7 +26,7 @@ import masproject.Agents.UserAgent;
 
 /**
  *
- * @author 8 Bit Hero
+ * @author N3148087
  */
 public class MASGui extends javax.swing.JFrame
 {
