@@ -11,7 +11,7 @@ import masproject.Agents.MetaAgent;
 
 /**
  *
- * @author luke
+ * @author N3148087
  */
 public class GuiProcessor extends DataProcessor
 {
