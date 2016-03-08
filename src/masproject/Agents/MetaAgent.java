@@ -41,6 +41,7 @@ public abstract class MetaAgent implements Runnable
         thread = new Thread(this);
         queue = new LinkedBlockingQueue<>();
         this.name = name;
+        thread.setName(this.getName());
 
     }
 

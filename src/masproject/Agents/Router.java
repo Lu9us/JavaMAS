@@ -65,6 +65,8 @@ public class Router extends MetaAgent {
                 }
             }
         }
+        else
+        {
         for (SocketAgent agent : socketMap.values()) {
             if (agent.getNameList().contains(msg.getReceiver())) {
                 agent.writeMessage(msg);
@@ -72,6 +74,8 @@ public class Router extends MetaAgent {
             }
 
         }
+        }
+        
 
     }
 

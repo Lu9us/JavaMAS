@@ -202,6 +202,16 @@ public class SocketAgent extends MetaAgent
      */
     public void parseMsg(Message msg) throws IOException
     {
+        
+        if(msg.getReceiver().equals("/all"))
+        {
+        if(this.clientNames.contains(msg.getSender())&&router!=null)
+        {
+         router.tranferMsg(msg);
+         return;
+        }
+        
+        }
 
         if (!msg.getReceiver().equals("") && !msg.getReceiver().equals(this.getName()))
         {
@@ -214,7 +224,8 @@ public class SocketAgent extends MetaAgent
                 router.tranferMsg(msg);
             }
 
-        } else
+        } 
+         else
         {
             //socket just connected send all known connected clients
             if (msg.getMsg().contains("/join"))

@@ -6,7 +6,6 @@
 package masproject.Agents;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -17,8 +16,7 @@ import java.util.logging.Logger;
  *
  * @author n3148087
  */
-public class Portal extends MetaAgent
-{
+public class Portal extends MetaAgent {
 
     private final Map<String, MetaAgent> InternalRoutingTable;
     private final Map<List<String>, MetaAgent> ExternalRoutingTable;
@@ -29,50 +27,46 @@ public class Portal extends MetaAgent
      *
      * @param name
      */
-    public Portal(String name)
-    {
+    public Portal(String name) {
         super(name);
 
-        InternalRoutingTable = new HashMap<>();
+        InternalRoutingTable = new ConcurrentHashMap<>();
         ExternalRoutingTable = new ConcurrentHashMap<>();
         //because it exploded if more than one thread ever needs to work on it
     }
 
     /**
-     * add the agent to the routing table 
+     * add the agent to the routing table
      *
      * @param name
      * @param agent
      */
-    public void addToRoutingTable(String name, MetaAgent agent)
-    {
-        if (!InternalRoutingTable.containsKey(name))
-        {
+    public void addToRoutingTable(String name, MetaAgent agent) {
+        if (!InternalRoutingTable.containsKey(name)) {
             InternalRoutingTable.put(name, agent);
             propigate();
-        } else
-        {
+        } else {
 
         }
     }
 
     /**
-     * return the internal routing table        
+     * return the internal routing table
+     *
      * @return
      */
-    public Map<String, MetaAgent> getInternalRoutingTable()
-    {
+    public Map<String, MetaAgent> getInternalRoutingTable() {
 
         return InternalRoutingTable;
 
     }
 
     /**
-     *set this portals socket agent
+     * set this portals socket agent
+     *
      * @param agent
      */
-    public void setSocketAgent(SocketAgent agent)
-    {
+    public void setSocketAgent(SocketAgent agent) {
         socketAgent = agent;
     }
 
@@ -82,18 +76,14 @@ public class Portal extends MetaAgent
      *
      * @param portal
      */
-    public void addPortal(Portal portal)
-    {
+    public void addPortal(Portal portal) {
         List<String> list = new ArrayList();
 
-        if (ExternalRoutingTable.containsValue(portal))
-        {
+        if (ExternalRoutingTable.containsValue(portal)) {
 
-            for (Map.Entry entry : ExternalRoutingTable.entrySet())
-            {
+            for (Map.Entry entry : ExternalRoutingTable.entrySet()) {
 
-                if (entry.getValue() == portal)
-                {
+                if (entry.getValue() == portal) {
                     ExternalRoutingTable.remove(entry.getKey());
                 }
 
@@ -101,8 +91,7 @@ public class Portal extends MetaAgent
 
         }
         list.add(portal.getName());
-        for (String entry : portal.InternalRoutingTable.keySet())
-        {
+        for (String entry : portal.InternalRoutingTable.keySet()) {
             list.add(entry);
 
         }
@@ -115,8 +104,7 @@ public class Portal extends MetaAgent
      * @param name
      * @return the name of an Agent
      */
-    public MetaAgent getLocalAgent(String name)
-    {
+    public MetaAgent getLocalAgent(String name) {
         return InternalRoutingTable.get(name);
     }
 
@@ -124,28 +112,22 @@ public class Portal extends MetaAgent
      *
      * Adds a portal to all known portals external routing tables
      */
-    public void propigate()
-    {
+    public void propigate() {
 
-        try
-        {
-            for (Map.Entry entry : ExternalRoutingTable.entrySet())
-            {
+        try {
+            for (Map.Entry entry : ExternalRoutingTable.entrySet()) {
                 ((Portal) entry.getValue()).addPortal(this);
             }
-            if(socketAgent!=null)
-            {
-            String clients = "/clients ";
-            for (String name : this.InternalRoutingTable.keySet())
-            {
-                clients += "," + name;
+            if (socketAgent != null) {
+                String clients = "/clients ";
+                for (String name : this.InternalRoutingTable.keySet()) {
+                    clients += "," + name;
 
+                }
+                Message msg = new Message(this.getName(), clients, "");
+                socketAgent.getQueue().put(msg);
             }
-            Message msg = new Message(this.getName(), clients, "");
-            socketAgent.getQueue().put(msg);
-            }
-        } catch (InterruptedException ex)
-        {
+        } catch (InterruptedException ex) {
             Logger.getLogger(Portal.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
@@ -156,44 +138,37 @@ public class Portal extends MetaAgent
      * external routing table
      */
     @Override
-    public void run()
-    {
-        while (true)
-        {
+    public void run() {
+        while (true) {
 
-            try
-            {
+            try {
                 Message msg = getQueue().take();
-                if (!msg.getReceiver().equals(this.getName()))
-                {
-                    if("/all".equals(msg.getReceiver()))
-                    {
-                    for(MetaAgent agent : InternalRoutingTable.values())
-                    {
-                    agent.receiveMessage(msg);
+                if (!msg.getReceiver().equals(this.getName())) {
+                    if ("/all".equals(msg.getReceiver())) {
+                       
+
+                            for (MetaAgent agent : InternalRoutingTable.values()) {
+                                agent.receiveMessage(msg);
+                            }
+                             if (InternalRoutingTable.containsKey(msg.getSender())) {
+                            if (socketAgent != null) {
+                                socketAgent.writeMessage(msg);
+                            }
+                        }
+
                     }
-                    if(socketAgent!=null)
-                    {
-                    socketAgent.writeMessage(msg);
-                    }
-                    }
-                    if (InternalRoutingTable.containsKey(msg.getReceiver()))
-                    {
+                   else if (InternalRoutingTable.containsKey(msg.getReceiver())) {
                         InternalRoutingTable.get(msg.getReceiver()).receiveMessage(msg);
-                    } else
-                    {
+                    } else {
                         boolean found = false;
-                        for (Map.Entry<List<String>, MetaAgent> entry : ExternalRoutingTable.entrySet())
-                        {
-                            if (entry.getKey().contains(msg.getReceiver()))
-                            {
+                        for (Map.Entry<List<String>, MetaAgent> entry : ExternalRoutingTable.entrySet()) {
+                            if (entry.getKey().contains(msg.getReceiver())) {
                                 entry.getValue().receiveMessage(msg);
                                 found = true;
                                 break;
                             }
                         }
-                        if (found == false&&socketAgent!=null)
-                        {
+                        if (found == false && socketAgent != null) {
                             socketAgent.writeMessage(msg);
                         }
 
@@ -201,12 +176,19 @@ public class Portal extends MetaAgent
 
                 }
 
-            } catch (InterruptedException ex)
-            {
+            } catch (InterruptedException ex) {
                 Logger.getLogger(Portal.class.getName()).log(Level.SEVERE, null, ex);
             }
 
         }
 
     }
+public void remove(String name)
+    {
+   
+    InternalRoutingTable.remove(name);
+    
+    }
+
+
 }
